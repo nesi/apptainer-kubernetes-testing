@@ -1,0 +1,168 @@
+# Namespace for our tests
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apptainer-test
+---
+# Test 1: Basic pod without special privileges
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-basic-test
+  namespace: apptainer-test
+  labels:
+    test: basic
+spec:
+  restartPolicy: Never
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never  # Use local image
+    command: ["/opt/test/test-apptainer.sh"]
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+---
+# Test 2: Pod with SYS_ADMIN capability
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-sysadmin-test
+  namespace: apptainer-test
+  labels:
+    test: sysadmin
+spec:
+  restartPolicy: Never
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never
+    command: ["/opt/test/test-apptainer.sh"]
+    securityContext:
+      capabilities:
+        add:
+        - SYS_ADMIN
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+---
+# Test 3: Pod with multiple capabilities for fakeroot
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-fakeroot-test
+  namespace: apptainer-test
+  labels:
+    test: fakeroot
+spec:
+  restartPolicy: Never
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never
+    command: ["/opt/test/test-apptainer.sh"]
+    securityContext:
+      capabilities:
+        add:
+        - SYS_ADMIN
+        - SETUID
+        - SETGID
+      allowPrivilegeEscalation: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+---
+# Test 4: Privileged pod (most permissive)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-privileged-test
+  namespace: apptainer-test
+  labels:
+    test: privileged
+spec:
+  restartPolicy: Never
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never
+    command: ["/opt/test/test-apptainer.sh"]
+    securityContext:
+      privileged: true
+      allowPrivilegeEscalation: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+---
+# Test 5: Pod with user namespaces disabled (if supported by your cluster)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-hostusers-test
+  namespace: apptainer-test
+  labels:
+    test: hostusers
+spec:
+  restartPolicy: Never
+  hostUsers: true  # Disable Kubernetes user namespaces
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never
+    command: ["/opt/test/test-apptainer.sh"]
+    securityContext:
+      privileged: true
+      allowPrivilegeEscalation: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+---
+# Interactive test pod for manual debugging
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apptainer-interactive
+  namespace: apptainer-test
+  labels:
+    test: interactive
+spec:
+  restartPolicy: Never
+  hostUsers: true
+  containers:
+  - name: apptainer-container
+    image: rocky-apptainer-test:9.4
+    imagePullPolicy: Never
+    command: ["/bin/bash"]
+    args: ["-c", "sleep 3600"]  # Keep alive for 1 hour
+    securityContext:
+      privileged: true
+      allowPrivilegeEscalation: true
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+    tty: true
+    stdin: true
