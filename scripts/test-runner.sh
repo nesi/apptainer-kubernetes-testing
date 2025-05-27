@@ -121,7 +121,7 @@ run_k8s_tests() {
     kubectl create namespace apptainer-test --dry-run=client -o yaml | kubectl apply -f -
     
     # Apply the test manifests (you'll need to create this file from the YAML artifact)
-    if [ -f "../k8s-manifsts/apptainer-k8s-tests.yaml" ]; then
+    if [ -f "../k8s-manifests/apptainer-k8s-tests.yaml" ]; then
         kubectl apply -f ../k8s-manifests/apptainer-k8s-tests.yaml
     else
         print_status $RED "../k8s-manifests/apptainer-k8s-tests.yaml not found!"
